@@ -43,13 +43,13 @@ def create_project():
   return jsonify(new_project), 201
 
 
-@app.route("/project/<string:name>")
-def get_project(name):
-  print(name)
-  for project in projects:
-    if project['name'] == name:
+@app.route("/project/<string:id>")
+def get_project(id):
+  print(id)
+  for project in projects['projects']:
+    if project['project_id'] == id:
       return jsonify(project)
-  return jsonify({'message': 'project not found'}), 404
+  return jsonify({'message': 'project not found'}), 40
 
 
 @app.route("/project/<string:name>/tasks")
