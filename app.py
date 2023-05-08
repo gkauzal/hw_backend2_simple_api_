@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request
 import pickle
 from create_pickle import createPickle
 import os
+import uuid
 
 app = Flask(__name__)
 
@@ -38,9 +39,42 @@ def get_projects():
 @app.route("/project", methods=['POST'])
 def create_project():
   request_data = request.get_json()
-  new_project = {'name': request_data['name'], 'tasks': request_data['tasks']}
-  projects.append(new_project)
-  return jsonify(new_project), 201
+  new_project_id = uuid.uuid4().hex[:24]
+  new_task_id = uuid.uuid4().hex[:24]
+  new_checklist_id = uuid.uuid4().hex[:24]
+  new_project = {
+      'completed':
+      request_data['completed'],
+      'creation_date':
+      request_data['creation_date'],
+      'name':
+      request_data['name'],
+      'project_id':
+      new_project_id,
+      'tasks': [{
+          'checklist': [{
+              'checklist_id': new_checklist_id,
+              'completed': request_data['completed'],
+              'name': request_data['name'],
+          }],
+          'completed':
+          request_data['completed'],
+          'name':
+          request_data['name'],
+          'task_id':
+          new_task_id,
+      }]
+  }
+  projects['projects'].append(
+      new_project)  # Append to the list instead of the dictionary
+  save_data(projects)
+  return jsonify({'message':
+                  f'project created with id: {new_project_id}'}), 201
+
+
+def save_data(data):
+  with open('projects.pickle', 'wb') as f:
+    pickle.dump(data, f)
 
 
 @app.route("/project/<string:id>")
