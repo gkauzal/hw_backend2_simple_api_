@@ -86,6 +86,19 @@ def get_project(id):
   return jsonify({'message': 'project not found'}), 40
 
 
+@app.route("/project/<string:id>/complete")
+def set_project_complete(id):
+  print(id)
+  for project in projects['projects']:
+    if project['project_id'] == id:
+      if project['completed'] == True:
+        return jsonify(''), 200
+      else:
+        project['completed'] = True
+        return jsonify(project)
+  return jsonify({'message': 'project not found'}), 404
+
+
 @app.route("/project/<string:name>/tasks")
 def get_project_tasks(name):
   for project in projects:
