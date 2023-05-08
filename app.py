@@ -1,19 +1,30 @@
 from flask import Flask, render_template, jsonify, request
+import pickle
+from create_pickle import createPickle
+import os
 
 app = Flask(__name__)
 
-projects = [{
-    'name': 'my first project',
-    'tasks': [{
-        'name': 'my first task',
-        'completed': False
-    }]
-}]
+#projects = [{
+#    'name': 'my first project',
+#    'tasks': [{
+#        'name': 'my first task',
+#        'completed': False
+#    }]
+#}]
+
+if os.path.isfile('projects.pickle'):
+  with open('projects.pickle', 'rb') as f:
+    projects = pickle.load(f)
+else:
+  createPickle()
+  with open('projects.pickle', 'rb') as f:
+    projects = pickle.load(f)
 
 
 @app.route("/")
 def home():
-  return render_template("index.html.j2", name="Zsolt")
+  return render_template("index.html.j2", name="Gabor")
 
 
 @app.route("/projects")
