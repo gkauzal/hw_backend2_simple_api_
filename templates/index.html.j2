@@ -15,7 +15,7 @@
       const response = await fetch("/projects");
       const data = await response.json();
       console.log(data);
-      for (project of data['projects'].projects) {
+      for (project of data.projects) {
         const element = `<p>${project.name
           }</p >`;
         document.getElementById("content").insertAdjacentHTML("beforeend", element);

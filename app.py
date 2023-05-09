@@ -3,6 +3,7 @@ import pickle
 from create_pickle import createPickle
 import os
 import uuid
+from filter import filter_list_of_dicts
 
 app = Flask(__name__)
 
@@ -30,10 +31,14 @@ def home():
 
 @app.route("/projects")
 def get_projects():
-  return jsonify({'projects': projects}), 200, {
-      # add Access-Control-Allow-Origin header
-      'Access-Control-Allow-Origin': 'http://127.0.0.1:8080'
-  }
+  try:
+    request_data = request.get_json()
+    return jsonify({
+        'projects':
+        filter_list_of_dicts(projects['projects'], request_data['fields'])
+    }), 200
+  except:
+    return jsonify(projects), 200
 
 
 @app.route("/project", methods=['POST'])
@@ -101,25 +106,47 @@ def set_project_complete(id):
 
 @app.route("/project/<string:name>/tasks")
 def get_project_tasks(name):
-  for project in projects:
-    if project['name'] == name:
-      return jsonify({'tasks': project['tasks']})
-  return jsonify({'message': 'project not found'}), 404
+  try:
+    request_data = request.get_json()
+    for project in projects['projects']:
+      if project['name'] == name:
+        return jsonify({
+            'tasks':
+            filter_list_of_dicts(project['tasks'], request_data['fields'])
+        })
+
+    return jsonify({'message': 'project not found'}), 404
+  except:
+    for project in projects['projects']:
+      if project['name'] == name:
+        return jsonify({'tasks': project['tasks']})
+    return jsonify({'message': 'project not found'}), 404
 
 
-@app.route("/project/<string:name>/task", methods=['POST'])
-def add_task_to_project(name):
+@app.route("/project/<string:id>/task", methods=['POST'])
+def add_task_to_project(id):
   request_data = request.get_json()
-  for project in projects:
-    if 'name' in project and project['name'] == name:
-      if 'completed' not in request_data or type(
-          request_data['completed']) is not bool:
+  new_task_id = uuid.uuid4().hex[:24]
+  new_checklist_id = uuid.uuid4().hex[:24]
+  for project in projects['projects']:
+    if project['project_id'] == id:
+      if type(request_data['completed']) is not bool:
         return jsonify(
             {'message': 'completed is required and must be a boolean'}), 400
       new_task = {
-          'name': request_data['name'],
-          'completed': request_data['completed']
+          'checklist': [{
+              'checklist_id': new_checklist_id,
+              'completed': request_data['completed'],
+              'name': request_data['name'],
+          }],
+          'completed':
+          request_data['completed'],
+          'name':
+          request_data['name'],
+          'task_id':
+          new_task_id,
       }
       project['tasks'].append(new_task)
-      return jsonify(new_task), 201
+      save_data(projects)
+      return jsonify({'message': f'task created with id: {new_task_id}'}), 201
   return jsonify({'message': 'project not found'}), 404
